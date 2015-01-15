@@ -35,17 +35,17 @@ func fixed(pre string, rate int) string {
 	}
 
 	var spd = float32(rate)
-	var suf = "á" // default: display as B/s
+	var suf = "B/s" //"á" // default: display as B/s
 	switch {
 	case spd >= (1000 * 1024 * 1024): // > 999 MiB/s
 		return "" + pre + "ERR"
 	case spd >= (1000 * 1024): // display as MiB/s
 		spd /= (1024 * 1024)
-		suf = "ã"
-		pre = "" + pre + ""
+		suf = "MiB/s" //"ã"
+		pre = ""      //"" + pre + ""
 	case spd >= 1000: // display as KiB/s
 		spd /= 1024
-		suf = "â"
+		suf = "KiB/s" //"â"
 	}
 
 	var formated = ""
@@ -56,7 +56,7 @@ func fixed(pre string, rate int) string {
 	} else {
 		formated = fmt.Sprintf(" %3.1f", spd)
 	}
-	return pre + strings.Replace(formated, ".", "à", 1) + suf
+	return pre + strings.Replace(formated, ".", ".", 1) + suf
 }
 
 // updateNetUse reads current transfer rates of certain network interfaces
@@ -74,14 +74,14 @@ func updateNetUse() string {
 		_, err = fmt.Sscanf(scanner.Text(), "%s %d %d %d %d %d %d %d %d %d",
 			&dev, &rx, &void, &void, &void, &void, &void, &void, &void, &tx)
 		switch dev { // ignore devices like tun, tap, lo, ...
-		case "eth0:", "eth1:", "wlan0:", "ppp0:":
+		case "eth0:", "eth1:", "wlan0:", "ppp0:", "wlo1:":
 			rxNow += rx
 			txNow += tx
 		}
 	}
 
 	defer func() { rxOld, txOld = rxNow, txNow }()
-	return fmt.Sprintf("%s %s", fixed("Ð", rxNow-rxOld), fixed("Ñ", txNow-txOld))
+	return fmt.Sprintf("%s %s", fixed("R: ", rxNow-rxOld), fixed("T: ", txNow-txOld))
 }
 
 // colored surrounds the percentage with color escapes if it is >= 70
@@ -141,9 +141,9 @@ func updatePower() string {
 	}
 
 	enPerc = enNow * 100 / enFull
-	var icon = "è"
+	var icon = "BAT: "
 	if string(plugged) == "1\n" {
-		icon = "é"
+		icon = "AC: "
 	}
 
 	if enPerc <= 5 {
@@ -165,7 +165,7 @@ func updateCPUUse() string {
 	if err != nil {
 		return "ÏERR"
 	}
-	return colored("Ï", int(load*100.0/float32(cores)))
+	return colored("CPU: ", int(load*100.0/float32(cores)))
 }
 
 // updateMemUse reads the memory used by applications and scales to [0, 100]
@@ -199,7 +199,7 @@ func updateMemUse() string {
 			done |= 8
 		}
 	}
-	return colored("Þ", used*100/total)
+	return colored("MEM:", used*100/total)
 }
 
 // main updates the dwm statusbar every second
@@ -211,9 +211,9 @@ func main() {
 			updateCPUUse(),
 			updateMemUse(),
 			updatePower(),
-			time.Now().Local().Format("Mon 02 Ý 15:04:05"),
+			time.Now().Local().Format("Mon 02 @ 15:04:05"),
 		}
-		exec.Command("xsetroot", "-name", strings.Join(status, "û")).Run()
+		exec.Command("xsetroot", "-name", strings.Join(status, " ")).Run()
 
 		// sleep until beginning of next second
 		var now = time.Now()
